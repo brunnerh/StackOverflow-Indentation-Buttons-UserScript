@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           SO-ExtendedEditor
+// @name           SO-IndentationButtons
 // @namespace      stackoverflow
 // @include        *stackoverflow.com*
 // ==/UserScript==
@@ -69,7 +69,7 @@
 	function createButtonContent(backgroundOffset)
 	{
 		var button = document.createElement("span");
-		button.setAttribute("style", "background-image: url('http://i.stack.imgur.com/5t3SJ.png');"
+		button.setAttribute("style", "background-image: url('http://i.stack.imgur.com/5t3SJ.png');" //What to do about the image/image hosting?
 		+ "background-position:" + backgroundOffset + "px top;"
 		+ "background-repeat: no-repeat;"
 		+ "display: inline-block;"
