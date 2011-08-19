@@ -6,8 +6,6 @@
 
 (function ()
 {
-	var inputTextBox = null;
-	var buttonRow = null;
 	jq_wait();
 
 	function jq_wait()
@@ -24,46 +22,82 @@
 
 	function setup()
 	{
-		inputTextBox = $("#wmd-input")[0];
-		getButtonRow();
-	}
-
-	function getButtonRow()
-	{
-		buttonRow = document.getElementById("wmd-button-row");
-		if (buttonRow == null)
+		buildButtons("-1");
+		var qEditLink = $(".edit-post");
+		qEditLink.each(function (i, editLink)
 		{
-			window.setTimeout((function () { getButtonRow() }), 100);
-		}
-		else
-		{
-			buildButtons();
-		}
-	}
-
-	function buildButtons()
-	{
-		addSeperator();
-
-		var buttonRedIndent = createButtonContent(0);
-		addButton(buttonRedIndent, "Reduce Indentation - Ctrl+[", indentationDown);
-
-		var buttonIncIndent = createButtonContent(-20);
-		addButton(buttonIncIndent, "Increase Indentation - Ctrl+]", indentationUp);
-
-		$(inputTextBox).keyup(function (e)
-		{
-			// Reduce Indentation: Ctrl+[
-			if (e.ctrlKey && e.keyCode == 219)
+			var qEditLink = $(editLink);
+			var id = qEditLink.attr("href").match(/\/posts\/(\d+)\/edit/)[1];
+			qEditLink.click(function ()
 			{
-				indentationDown();
-			}
-			// Increase Indentation: Ctrl+]
-			if (e.ctrlKey && e.keyCode == 221)
-			{
-				indentationUp();
-			}
+				buildButtons(id);
+			});
 		});
+	}
+
+	function buildButtons(postId)
+	{
+		var textBox;
+		var buttonRow;
+		getTextBoxAndContinue();
+
+		function getTextBoxAndContinue()
+		{
+			var tbId = postId == "-1" ? "wmd-input" : "wmd-input-" + postId;
+			textBox = document.getElementById(tbId);
+			if (textBox == null)
+			{
+				window.setTimeout((function () { getTextBoxAndContinue() }), 100);
+			}
+			else
+			{
+				continue1();
+			}
+		}
+
+		function continue1()
+		{
+			getButtonRowAndContinue();
+
+			function getButtonRowAndContinue()
+			{
+				var rowId = postId == "-1" ? "wmd-button-row" : "wmd-button-row-" + postId;
+				buttonRow = document.getElementById(rowId);
+				if (buttonRow == null)
+				{
+					window.setTimeout((function () { getButtonRowAndContinue() }), 100);
+				}
+				else
+				{
+					continue2();
+				}
+			}
+		}
+
+		function continue2()
+		{
+			addSeperator(buttonRow);
+
+			var buttonRedIndent = createButtonContent(0);
+			addButton(textBox, buttonRow, buttonRedIndent, "Reduce Indentation - Ctrl+[", indentationDown);
+
+			var buttonIncIndent = createButtonContent(-20);
+			addButton(textBox, buttonRow, buttonIncIndent, "Increase Indentation - Ctrl+]", indentationUp);
+
+			$(textBox).keyup(function (e)
+			{
+				// Reduce Indentation: Ctrl+[
+				if (e.ctrlKey && e.keyCode == 219)
+				{
+					indentationDown(textBox);
+				}
+				// Increase Indentation: Ctrl+]
+				if (e.ctrlKey && e.keyCode == 221)
+				{
+					indentationUp(textBox);
+				}
+			});
+		}
 	}
 
 	function createButtonContent(backgroundOffset)
@@ -86,21 +120,21 @@
 		return button;
 	}
 
-	function addSeperator()
+	function addSeperator(buttonRow)
 	{
 		var li = document.createElement("li");
 		$(li).addClass("wmd-spacer");
-		$(li).css("left", getButtonOffset());
+		$(li).css("left", getButtonOffset(buttonRow));
 		$(buttonRow).append(li);
 	}
 
-	function addButton(/* node */content, /* string */title, /* function */onclick)
+	function addButton(/*node*/textBox, /*node*/buttonRow, /*node*/content, /*string*/title, /*function(TextBox)*/onclick)
 	{
 		var li = document.createElement("li");
 		$(li).addClass("wmd-button");
-		$(li).css("left", getButtonOffset());
+		$(li).css("left", getButtonOffset(buttonRow));
 		$(li).attr("title", title);
-		$(li).click(function (event) { onclick(); });
+		$(li).click(function (event) { onclick(textBox); });
 		var span = document.createElement("span");
 		$(span).append(content);
 		$(span).css("background-image", "none");
@@ -108,16 +142,16 @@
 		$(buttonRow).append(li);
 	}
 
-	function getButtonOffset()
+	function getButtonOffset(buttonRow)
 	{
 		return ($(buttonRow).find("li").length - 1) * 25; // -1 because of the help button on the right
 	}
 
 	///// Button Functions /////
 
-	function indentationUp()
+	function indentationUp(textBox)
 	{
-		var text = inputTextBox.value.substring(inputTextBox.selectionStart, inputTextBox.selectionEnd);
+		var text = textBox.value.substring(textBox.selectionStart, textBox.selectionEnd);
 		var lines = text.split("\n");
 		var shift = 0;
 		for (var i = 0; i < lines.length; i++)
@@ -125,13 +159,13 @@
 			lines[i] = "    " + lines[i];
 			shift += 4;
 		}
-		replaceSelection(inputTextBox, lines.join("\n"));
-		inputTextBox.focus();
+		replaceSelection(textBox, lines.join("\n"));
+		textBox.focus();
 	}
 
-	function indentationDown()
+	function indentationDown(textBox)
 	{
-		var text = inputTextBox.value.substring(inputTextBox.selectionStart, inputTextBox.selectionEnd);
+		var text = textBox.value.substring(textBox.selectionStart, textBox.selectionEnd);
 		var lines = text.split("\n");
 		var shift = 0;
 		for (var i = 0; i < lines.length; i++)
@@ -147,8 +181,8 @@
 				shift++;
 			}
 		}
-		replaceSelection(inputTextBox, lines.join("\n"));
-		inputTextBox.focus();
+		replaceSelection(textBox, lines.join("\n"));
+		textBox.focus();
 	}
 
 	///// Helper Functions /////
