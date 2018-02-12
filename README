@@ -1,3 +1,0 @@
-This is a user-script for StackOverflow which is supposed to add buttons to the text editor which allow increasing and decreasing indentation of the selected text.
-
-Chrome has some native support for user-scripts, on Firefox the addon "Greasemonkey" allows user-script management.
