@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name           SO-IndentationButtons
-// @namespace      stackoverflow
+// @version        1.2
+// @namespace      brunnerh:gm
 // @include        *stackoverflow.com*
 // @include        *stackexchange.com*
 // ==/UserScript==
@@ -28,7 +29,7 @@
 			})
 
 		// Handle edit links.
-		Array.from(document.querySelectorAll(".edit-post"))
+		Array.from(document.querySelectorAll(".js-edit-post"))
 			.forEach((/** @type {HTMLAnchorElement} */ link) =>
 			{
 				const id = link.href.match(/\/posts\/(\d+)\/edit/)[1];
@@ -47,7 +48,7 @@
 	 * @template T
 	 * @param {() => T} callback The polling function. If the returned value is falsey, polling continues.
 	 * @param {number} interval The time to wait between polls in milliseconds.
-	 * @param {number?} timeout The maximal time used for polling in milliseconds. -1 disables the timeout. Default: 5000
+	 * @param {number} timeout The maximal time used for polling in milliseconds. -1 disables the timeout. Default: 5000
 	 */
 	async function poll(callback, interval, timeout = 5000)
 	{
@@ -75,10 +76,10 @@
 		const timeout = postId == null ? -1 : 5000;
 
 		const tbId = postId == null ? "wmd-input" : "wmd-input-" + postId;
-		let textBox = await poll(() => /** @type {HTMLTextAreaElement} */(document.getElementById(tbId)), 100, timeout);
+		const textBox = await poll(() => /** @type {HTMLTextAreaElement} */(document.getElementById(tbId)), 100, timeout);
 
 		const rowId = postId == null ? "wmd-button-row" : "wmd-button-row-" + postId;
-		let buttonRow = await poll(() => document.getElementById(rowId), 100, timeout);
+		const buttonRow = await poll(() => document.getElementById(rowId), 100, timeout);
 
 		const modifyButtonBar = () =>
 		{
@@ -92,12 +93,12 @@
 			li.classList.add("wmd-spacer");
 			li.style.left = getButtonOffset(buttonRow) + "px";
 			buttonRow.appendChild(li);
-	
+
 			/**
 			 * Adds a button to the button bar.
 			 * @param {HTMLElement} content The button content.
 			 * @param {string} title The title of the button.
-			 * @param {(textBox: HTMLElement) => void} onclick The click handler which gets passed the text box.
+			 * @param {(textBox: HTMLTextAreaElement) => void} onclick The click handler which gets passed the text box.
 			 */
 			function addButton(content, title, onclick)
 			{
@@ -107,15 +108,15 @@
 				li.style.left = getButtonOffset(buttonRow) + "px";
 				li.title = title;
 				li.addEventListener("click", () => onclick(textBox));
-	
+
 				const span = document.createElement("span");
 				span.appendChild(content);
 				span.style.backgroundImage = "none";
-	
+
 				li.appendChild(span);
 				buttonRow.appendChild(li);
 			}
-	
+
 			addButton(createButtonContent(0), "Decrease Indentation - Ctrl+[", indentationDown);
 			addButton(createButtonContent(-20), "Increase Indentation - Ctrl+]", indentationUp);
 		}
@@ -174,10 +175,11 @@
 	 */
 	function getButtonOffset(buttonRow)
 	{
-		return (buttonRow.querySelectorAll("li").length - 1) * 25; // -1 because of the help button on the right
+		// -1 because of the help button on the right
+		return (buttonRow.querySelectorAll("li").length - 1) * 25;
 	}
 
-	///// Button Functions /////
+	// #region Button Functions
 
 	/**
 	 * Increases indentation.
@@ -223,7 +225,10 @@
 		textBox.focus();
 	}
 
-	///// Helper Functions /////
+	// #endregion
+
+
+	// //#region Helper Functions
 
 	/**
 	 * Replaces the selected text in a textbox.
@@ -233,23 +238,13 @@
 	function replaceSelection(textbox, text)
 	{
 		const selectionStart = textbox.selectionStart;
-		textbox.value = textbox.value.substring(0, textbox.selectionStart) + text + textbox.value.substring(textbox.selectionEnd);
+		textbox.value =
+			textbox.value.substring(0, textbox.selectionStart) +
+			text +
+			textbox.value.substring(textbox.selectionEnd);
 		textbox.selectionStart = selectionStart;
 		textbox.selectionEnd = selectionStart + text.length;
 	}
-	/**
-	 * Surrounds the selected text in a textbox.
-	 * @param {HTMLTextAreaElement} textbox The text area whose selection to replace.
-	 * @param {string} head The text to add before the selection.
-	 * @param {string} tail The text to add after the selection.
-	 */
-	function surroundSelection(textbox, head, tail)
-	{
-		const selectionStart = textbox.selectionStart;
-		const selectedText = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd);
-		const selectionLength = selectedText.length;
-		textbox.value = textbox.value.substring(0, textbox.selectionStart) + head + selectedText + tail + textbox.value.substring(textbox.selectionEnd);
-		textbox.selectionStart = selectionStart + head.length;
-		textbox.selectionEnd = textbox.selectionStart + selectionLength;
-	}
+
+	// #endregion
 })();
